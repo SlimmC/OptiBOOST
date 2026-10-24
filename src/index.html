@@ -501,25 +501,23 @@
     }
 
     async function submitLicense() {
-      const key = document.getElementById('licenseInput').value;
+      const key = document.getElementById('licenseInput').value.trim();
       if (!key) {
         alert("Please enter a license key.");
         return;
       }
 
       try {
-        // Call our new Rust verify_license command
         const isValid = await window.__TAURI__.invoke('verify_license', { key: key });
-        
         if (isValid) {
-          alert("License key received by Rust backend successfully!");
+          alert("License activated successfully! OptiBOOST Pro features unlocked.");
           closeModal();
         } else {
-          alert("Invalid license key.");
+          alert("Invalid or expired license key. Please try again.");
         }
       } catch (error) {
-        console.error("Failed to invoke Rust backend:", error);
-        alert("Error communicating with backend.");
+        console.error("Backend error:", error);
+        alert("Could not verify license. Please check your internet connection.");
       }
     }
   </script>
