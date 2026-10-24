@@ -1,0 +1,38 @@
+name: Build OptiBOOST App
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build Tauri Desktop App
+        uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: v1.0.0
+          releaseName: 'OptiBOOST v1.0.0'
+          releaseBody: 'Initial release of OptiBOOST 1-Click PC Game Optimizer.'
+          releaseDraft: false
+          prerelease: false
+
+      - name: Upload Windows Installer Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: OptiBOOST-Windows-Installer
+          path: src-tauri/target/release/bundle/nsis/*.exe
