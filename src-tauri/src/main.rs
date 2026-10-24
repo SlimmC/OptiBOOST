@@ -104,7 +104,13 @@ async fn execute_full_boost() -> BoostResult {
         log_messages: logs,
     }
 }
-
+#[command]
+fn verify_license(key: String) -> bool {
+    // We will hook this up to Lemon Squeezy next, 
+    // but for now, let's just print it to check!
+    println!("Received license key from frontend: {}", key);
+    true
+}
 fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
@@ -112,7 +118,8 @@ fn main() {
             optimize_power_plan,
             optimize_network,
             optimize_services,
-            execute_full_boost
+            execute_full_boost,
+            verify_license  // <-- Add this line here (don't forget the comma!)
         ])
         .run(tauri::generate_context!())
         .expect("error while running OptiBOOST application");
