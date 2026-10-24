@@ -500,9 +500,27 @@
       document.getElementById('licenseModal').style.display = 'none';
     }
 
-    function submitLicense() {
+    async function submitLicense() {
       const key = document.getElementById('licenseInput').value;
-      alert("You typed key: " + key + "\n(Next up: Connecting this to Rust to verify with Lemon Squeezy!)");
+      if (!key) {
+        alert("Please enter a license key.");
+        return;
+      }
+
+      try {
+        // Call our new Rust verify_license command
+        const isValid = await window.__TAURI__.invoke('verify_license', { key: key });
+        
+        if (isValid) {
+          alert("License key received by Rust backend successfully!");
+          closeModal();
+        } else {
+          alert("Invalid license key.");
+        }
+      } catch (error) {
+        console.error("Failed to invoke Rust backend:", error);
+        alert("Error communicating with backend.");
+      }
     }
   </script>
   <!-- OptiBOOST Pro Activation Modal -->
