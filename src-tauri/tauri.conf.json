@@ -14,11 +14,13 @@
       "all": true
     },
     "bundle": {
-      "active": true,
-      "targets": [],
-      "identifier": "com.optiboost.app",
-      "icon": []
-    },
+  "active": true,
+  "targets": "all",
+  "identifier": "com.optiboost.app",
+  "icon": [
+    "icons/icon.ico"
+  ]
+},
     "windows": [
       {
         "title": "OptiBOOST - 1-Click Game Optimizer",
