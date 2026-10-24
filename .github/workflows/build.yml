@@ -21,16 +21,23 @@ jobs:
       - name: Rust setup
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Create Dummy Icon for Build
-        run: |
-          New-Item -ItemType Directory -Force -Path "src-tauri/icons"
-          # Create a dummy file to satisfy the compiler check
-          Set-Content -Path "src-tauri/icons/icon.ico" -Value "dummy icon content"
+      - name: Install Dependencies
+        run: npm install
 
-      - name: Install dependencies & Build
+      - name: Generate Valid Tauri Icons
         run: |
-          npm install
-          npm run tauri build
+          # Create a basic source icon PNG if it doesn't exist
+          New-Item -ItemType Directory -Force -Path "src-tauri/icons"
+          
+          # Create a tiny valid 1x1 transparent PNG as base64 and decode it
+          $base64Png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+          [System.IO.File]::WriteAllBytes("src-tauri/icons/icon.png", [System.Convert]::FromBase64String($base64Png))
+          
+          # Use Tauri CLI to generate proper 3.00 format .ico files
+          npx tauri icon src-tauri/icons/icon.png
+
+      - name: Build Tauri App
+        run: npm run tauri build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
