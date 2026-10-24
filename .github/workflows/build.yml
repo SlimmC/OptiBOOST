@@ -1,48 +1,42 @@
-name: Build OptiBOOST App
+name: "Publish Release"
 
 on:
   push:
-    branches: [ "main", "master" ]
-  workflow_dispatch:
+    tags:
+      - 'v*'
 
 jobs:
-  build:
-    runs-on: windows-latest
+  publish:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [windows-latest]
 
+    runs-on: ${{ matrix.platform }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Node setup
+      - name: setup node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 18
 
-      - name: Rust setup
+      - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Install Dependencies
+      - name: install dependencies (Windows)
+        if: matrix.platform == 'windows-latest'
         run: npm install
 
-      - name: Generate Valid Tauri Icons
-        run: |
-          # Create a basic source icon PNG if it doesn't exist
-          New-Item -ItemType Directory -Force -Path "src-tauri/icons"
-          
-          # Create a tiny valid 1x1 transparent PNG as base64 and decode it
-          $base64Png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
-          [System.IO.File]::WriteAllBytes("src-tauri/icons/icon.png", [System.Convert]::FromBase64String($base64Png))
-          
-          # Use Tauri CLI to generate proper 3.00 format .ico files
-          npx tauri icon src-tauri/icons/icon.png
-
-      - name: Build Tauri App
-        run: npm run tauri build
+      - name: Run Tauri Build & Release
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload Windows Installer
-        uses: actions/upload-artifact@v4
         with:
-          name: OptiBOOST-Windows-Installer
-          path: src-tauri/target/release/bundle/nsis/*.exe
+          tagName: __TAURI_RELEASE_TAG__
+          releaseName: 'OptiBOOST __TAURI_RELEASE_TAG__'
+          releaseBody: 'Official release of OptiBOOST v1.0.0'
+          releaseDraft: false
+          prerelease: false
