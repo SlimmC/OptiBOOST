@@ -373,7 +373,7 @@
     </div>
   </div>
 
-  <!-- SCRIPT LOGIC -->
+<!-- SCRIPT LOGIC -->
   <script>
     let isBoosting = false;
 
@@ -386,7 +386,24 @@
       consoleEl.scrollTop = consoleEl.scrollHeight;
     }
 
-    function runMasterBoost() {
+    // Fetch real-time hardware telemetry on app startup
+    async function loadSystemMetrics() {
+      try {
+        const metrics = await window.__TAURI__.invoke('get_system_metrics');
+        
+        // Update RAM UI
+        const ramText = `${metrics.used_memory_gb} / ${metrics.total_memory_gb} GB`;
+        document.getElementById('ramUsageVal').textContent = ramText;
+        document.getElementById('ramUsageBar').style.width = metrics.memory_usage_percent + '%';
+        
+        appendLog(`Hardware loaded: ${metrics.total_memory_gb} GB RAM detected (${metrics.memory_usage_percent}% in use).`);
+      } catch (err) {
+        console.error("Failed to load backend system metrics:", err);
+        appendLog("[Warning] Running on fallback telemetry simulation.");
+      }
+    }
+
+    async function runMasterBoost() {
       if (isBoosting) return;
       isBoosting = true;
 
@@ -404,45 +421,40 @@
       badge.textContent = 'Optimizing...';
       badge.className = 'inline-block px-3 py-1 rounded-full text-xs font-bold bg-amber-950 text-amber-300 border border-amber-800/50 animate-pulse';
 
-      appendLog('Starting 1-Click Master PC Boost sequence...');
+      appendLog('Initializing OptiBOOST backend engine...');
+      progressBar.style.width = '30%';
+      progressPercent.textContent = '30%';
+      progressStepText.textContent = 'Executing PowerShell system tuning...';
 
-      let percent = 0;
-      const steps = [
-        { pct: 20, text: 'Purging Windows Temp & Shader Caches...', log: 'Cleared 2.4 GB temporary shader cache.' },
-        { pct: 50, text: 'Flushing RAM memory leaks...', log: 'Unloaded 14 inactive background processes.' },
-        { pct: 75, text: 'Optimizing TCP & DNS ping stack...', log: 'DNS flushed. Network socket buffer size adjusted.' },
-        { pct: 100, text: 'Applying Ultimate Performance Power Plan...', log: 'Windows Game Mode forced active. High-priority CPU assigned.' }
-      ];
+      try {
+        // Call the real Rust backend command that runs PowerShell optimizations
+        const result = await window.__TAURI__.invoke('execute_full_boost');
+        
+        progressBar.style.width = '100%';
+        progressPercent.textContent = '100%';
 
-      let stepIdx = 0;
-      const interval = setInterval(() => {
-        percent += 5;
-        progressBar.style.width = percent + '%';
-        progressPercent.textContent = percent + '%';
-
-        if (steps[stepIdx] && percent >= steps[stepIdx].pct) {
-          progressStepText.textContent = steps[stepIdx].text;
-          appendLog(steps[stepIdx].log);
-          stepIdx++;
+        // Print each log message returned from Rust backend
+        if (result && result.log_messages) {
+          result.log_messages.forEach(msg => appendLog(msg));
         }
 
-        if (percent >= 100) {
-          clearInterval(interval);
-          isBoosting = false;
-          btn.classList.remove('opacity-50', 'cursor-not-allowed');
-          progressSection.classList.add('hidden');
-          resultsPanel.classList.remove('hidden');
+        // Update UI Results Panel
+        document.getElementById('resRam').textContent = `${result.space_freed_mb} MB`;
+        resultsPanel.classList.remove('hidden');
 
-          badge.textContent = 'System Optimized';
-          badge.className = 'inline-block px-3 py-1 rounded-full text-xs font-bold bg-emerald-950 text-emerald-300 border border-emerald-800/50';
+        badge.textContent = 'System Optimized';
+        badge.className = 'inline-block px-3 py-1 rounded-full text-xs font-bold bg-emerald-950 text-emerald-300 border border-emerald-800/50';
 
-          // Live telemetry update
-          document.getElementById('ramUsageVal').textContent = '9.4 / 16.0 GB';
-          document.getElementById('ramUsageBar').style.width = '58%';
-          document.getElementById('pingVal').textContent = '12 ms';
-          document.getElementById('pingBar').style.width = '15%';
-        }
-      }, 150);
+        // Refresh live hardware metrics post-boost
+        loadSystemMetrics();
+      } catch (err) {
+        console.error("Boost execution error:", err);
+        appendLog("[Error] Failed to execute full boost sequence.");
+      } finally {
+        isBoosting = false;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        progressSection.classList.add('hidden');
+      }
     }
 
     function runAutoOverclock() {
@@ -468,10 +480,15 @@
       appendLog('Clock speeds safely reset to factory defaults.');
     }
 
-    function purgeRamOnly() {
-      appendLog('Manual RAM Purge triggered: Freed 1.8 GB.');
-      document.getElementById('ramUsageVal').textContent = '10.0 / 16.0 GB';
-      document.getElementById('ramUsageBar').style.width = '62%';
+    async function purgeRamOnly() {
+      appendLog('Triggering manual RAM and temp cache cleanup...');
+      try {
+        const freed = await window.__TAURI__.invoke('clean_temp_files');
+        appendLog(`Manual RAM purge complete: Reclaimed ~${freed} MB.`);
+        loadSystemMetrics();
+      } catch (err) {
+        appendLog('[Error] Manual purge failed.');
+      }
     }
 
     function launchGame(client) {
@@ -492,6 +509,7 @@
       alert('OptiBOOST Ultra activated! Thank you for supporting the project.');
       toggleUltraModal();
     }
+
     function openModal() {
       document.getElementById('licenseModal').style.display = 'flex';
     }
@@ -520,6 +538,11 @@
         alert("Could not verify license. Please check your internet connection.");
       }
     }
+
+    // Load live telemetry on window startup
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSystemMetrics();
+    });
   </script>
   <!-- OptiBOOST Pro Activation Modal -->
   <div id="licenseModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; z-index: 9999;">
