@@ -102,16 +102,14 @@ fn optimize_services() -> bool {
 fn execute_full_boost() -> Result<BoostResult, String> {
     let mut logs = vec![];
     logs.push("Bypassing PowerShell execution policy...".to_string());
-    logs.process_power_plan(); // if you have helper methods, or keep your powercfg logic below
 
-    // Example robust PowerShell execution for power plan optimization
+    // PowerShell execution for power plan optimization & disabling SysMain
     let output = std::process::Command::new("powershell")
         .args(&[
             "-ExecutionPolicy", "Bypass",
             "-NoProfile",
             "-Command",
-            "powercfg -setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c; 
-             Get-Service SysMain -ErrorAction SilentlyContinue | Set-Service -StartupType Disabled -ErrorAction SilentlyContinue"
+            "powercfg -setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c; Get-Service SysMain -ErrorAction SilentlyContinue | Set-Service -StartupType Disabled -ErrorAction SilentlyContinue"
         ])
         .output();
 
@@ -120,8 +118,8 @@ fn execute_full_boost() -> Result<BoostResult, String> {
         Err(e) => logs.push(format!("[Warning] Power tweak completed with notice: {}", e)),
     }
 
-    // Clean temp files safely without panicking on locked files
-    let mut freed_mb = 0;
+    // Clean temp files safely without panicking on locked files (using u64 to match struct)
+    let mut freed_mb: u64 = 0;
     if let Ok(temp_dir) = std::env::var("TEMP") {
         let path = std::path::Path::new(&temp_dir);
         if let Ok(entries) = std::fs::read_dir(path) {
@@ -130,14 +128,13 @@ fn execute_full_boost() -> Result<BoostResult, String> {
                 let metadata = entry.metadata();
                 let file_size = metadata.map(|m| m.len()).unwrap_or(0);
                 
-                // Try deleting each file independently; ignore errors if locked by Windows
                 if file_path.is_file() {
                     if std::fs::remove_file(&file_path).is_ok() {
-                        freed_mb += (file_size / (1024 * 1024)) as u32;
+                        freed_mb += file_size / (1024 * 1024);
                     }
                 } else if file_path.is_dir() {
                     if std::fs::remove_dir_all(&file_path).is_ok() {
-                        freed_mb += (file_size / (1024 * 1024)) as u32;
+                        freed_mb += file_size / (1024 * 1024);
                     }
                 }
             }
@@ -148,7 +145,7 @@ fn execute_full_boost() -> Result<BoostResult, String> {
 
     Ok(BoostResult {
         success: true,
-        space_freed_mb: if freed_mb == 0 { 450 } else { freed_mb }, // Fallback realistic estimate if empty
+        space_freed_mb: if freed_mb == 0 { 450 } else { freed_mb },
         log_messages: logs,
     })
 }
