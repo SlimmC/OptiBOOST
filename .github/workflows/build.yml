@@ -9,34 +9,28 @@ jobs:
   publish:
     permissions:
       contents: write
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [windows-latest]
-
-    runs-on: ${{ matrix.platform }}
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
 
       - name: setup node
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
 
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
 
-      - name: install dependencies (Windows)
-        if: matrix.platform == 'windows-latest'
+      - name: install dependencies
         run: npm install
 
-      - name: Run Tauri Build & Release
+      - name: Build and publish release
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: __TAURI_RELEASE_TAG__
-          releaseName: 'OptiBOOST __TAURI_RELEASE_TAG__'
-          releaseBody: 'Official release of OptiBOOST v1.0.0'
+          tagName: ${{ github.ref_name }}
+          releaseName: 'OptiBOOST ${{ github.ref_name }}'
+          releaseBody: 'Windows installer for OptiBOOST. Download the setup .exe below.'
           releaseDraft: false
           prerelease: false
