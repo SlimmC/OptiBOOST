@@ -505,7 +505,7 @@
         const m = await tauriInvoke('get_system_metrics');
         $('cpuUsageVal').textContent = Math.round(m.cpuUsagePercent) + '%';
         setBar('cpuUsageBar', m.cpuUsagePercent);
-        $('ramUsageVal').textContent = m.usedMemoryGb + ' / ' + m.totalMemoryGb + ' GB';
+        $('ramUsageVal').textContent = m.usedMemoryGb.toFixed(1) + ' / ' + m.totalMemoryGb.toFixed(1) + ' GB';
         setBar('ramUsageBar', m.memoryUsagePercent);
         if (m.diskTotalGb > 0) {
           $('diskUsageVal').textContent = Math.round(m.diskUsedGb) + ' / ' + Math.round(m.diskTotalGb) + ' GB';
