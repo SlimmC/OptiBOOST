@@ -179,6 +179,25 @@
       </div>
 
 
+
+      <!-- PC Check-Up -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+          <div>
+            <span class="text-xs font-bold tracking-widest text-cyan-400 uppercase font-orbitron">Diagnostics</span>
+            <h2 class="text-2xl font-extrabold text-white font-orbitron">PC Check-Up</h2>
+            <p class="text-slate-400 text-sm mt-1">Scans for common settings that hold back gaming performance, explains each one, and fixes the safe ones for you.</p>
+          </div>
+          <button id="checkupBtn" onclick="runCheckup()" class="shrink-0 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-orbitron font-bold text-xs px-5 py-3 rounded-xl transition flex items-center gap-2">
+            <i class="fa-solid fa-stethoscope"></i> RUN CHECK-UP
+          </button>
+        </div>
+        <div id="checkupSummary" class="hidden mb-3 text-sm font-semibold text-slate-200 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3"></div>
+        <div id="checkupList" class="space-y-2">
+          <div class="text-xs text-slate-500">Press RUN CHECK-UP to scan this PC. It only reads settings until you press a Fix button.</div>
+        </div>
+      </div>
+
     </section>
 
     <!-- RIGHT COLUMN: Hardware Status Dashboard & Game Launcher -->
@@ -186,9 +205,13 @@
 
       <!-- Live PC Telemetry (real values from the backend) -->
       <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5">
-        <h3 class="font-orbitron font-bold text-lg text-white mb-4 flex items-center gap-2">
+        <h3 class="font-orbitron font-bold text-lg text-white mb-3 flex items-center gap-2">
           <i class="fa-solid fa-chart-pie text-cyan-400"></i> Live PC Telemetry
         </h3>
+        <div class="text-[11px] text-slate-400 mb-4 space-y-0.5">
+          <div id="hwCpu">CPU: reading...</div>
+          <div id="hwGpu">GPU: reading...</div>
+        </div>
         <div class="space-y-4">
           <div>
             <div class="flex justify-between text-xs font-semibold mb-1">
@@ -201,6 +224,24 @@
           </div>
           <div>
             <div class="flex justify-between text-xs font-semibold mb-1">
+              <span class="text-slate-300"><i class="fa-solid fa-display text-purple-400 mr-1"></i> GPU Usage</span>
+              <span id="gpuUsageVal" class="text-purple-400 font-orbitron">-</span>
+            </div>
+            <div class="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden border border-slate-800">
+              <div id="gpuUsageBar" class="bg-purple-500 h-full w-0 transition-all duration-500"></div>
+            </div>
+          </div>
+          <div id="vramRow" class="hidden">
+            <div class="flex justify-between text-xs font-semibold mb-1">
+              <span class="text-slate-300"><i class="fa-solid fa-memory text-pink-400 mr-1"></i> GPU Memory (VRAM)</span>
+              <span id="vramUsageVal" class="text-pink-400 font-orbitron">-</span>
+            </div>
+            <div class="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden border border-slate-800">
+              <div id="vramUsageBar" class="bg-pink-500 h-full w-0 transition-all duration-500"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between text-xs font-semibold mb-1">
               <span class="text-slate-300"><i class="fa-solid fa-memory text-emerald-400 mr-1"></i> System RAM</span>
               <span id="ramUsageVal" class="text-emerald-400 font-orbitron">-</span>
             </div>
@@ -208,7 +249,35 @@
               <div id="ramUsageBar" class="bg-emerald-500 h-full w-0 transition-all duration-500"></div>
             </div>
           </div>
+          <div>
+            <div class="flex justify-between text-xs font-semibold mb-1">
+              <span class="text-slate-300"><i class="fa-solid fa-hard-drive text-amber-400 mr-1"></i> Windows Drive</span>
+              <span id="diskUsageVal" class="text-amber-400 font-orbitron">-</span>
+            </div>
+            <div class="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden border border-slate-800">
+              <div id="diskUsageBar" class="bg-amber-500 h-full w-0 transition-all duration-500"></div>
+            </div>
+          </div>
         </div>
+
+        <div class="grid grid-cols-2 gap-3 mt-4 text-center">
+          <div class="bg-slate-950 border border-slate-800 rounded-lg p-2">
+            <div class="text-[11px] text-slate-400">Running Processes</div>
+            <div id="procCount" class="text-sm font-bold text-cyan-400 font-orbitron">-</div>
+          </div>
+          <div class="bg-slate-950 border border-slate-800 rounded-lg p-2">
+            <div class="text-[11px] text-slate-400">Windows Uptime</div>
+            <div id="uptimeVal" class="text-sm font-bold text-cyan-400 font-orbitron">-</div>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <div class="text-xs font-bold text-slate-300 mb-2"><i class="fa-solid fa-list-ol text-cyan-400 mr-1"></i> Top apps by memory</div>
+          <div id="topApps" class="space-y-1 text-xs font-mono text-slate-400">
+            <div class="text-slate-600">Reading...</div>
+          </div>
+        </div>
+        <p class="text-[10px] text-slate-500 mt-4">GPU temperature and memory are shown for NVIDIA cards only. CPU temperature needs special drivers, so it isn't shown.</p>
       </div>
 
       <!-- Game launchers -->
@@ -240,6 +309,8 @@
   <!-- SCRIPT LOGIC -->
   <script>
     let isBoosting = false;
+    let metricsBusy = false;
+    let gpuBusy = false;
 
     function tauriInvoke(cmd, args) {
       const t = window.__TAURI__;
@@ -248,8 +319,11 @@
       return inv(cmd, args);
     }
 
+    function errText(e) { return e && e.message ? e.message : String(e); }
+    function $(id) { return document.getElementById(id); }
+
     function appendLog(msg) {
-      const el = document.getElementById('logConsole');
+      const el = $('logConsole');
       const time = new Date().toLocaleTimeString().split(' ')[0];
       const line = document.createElement('div');
       const stamp = document.createElement('span');
@@ -262,42 +336,39 @@
     }
 
     function setBadge(text, cls) {
-      const badge = document.getElementById('boostStatusBadge');
+      const badge = $('boostStatusBadge');
       badge.textContent = text;
       badge.className = 'inline-block px-3 py-1 rounded-full text-xs font-bold ' + cls;
     }
 
+    // ------------------------------------------------------------ boost
     async function runMasterBoost() {
       if (isBoosting) return;
       isBoosting = true;
-
-      const btn = document.getElementById('masterBoostBtn');
-      const progressSection = document.getElementById('progressSection');
-      const resultsPanel = document.getElementById('resultsPanel');
+      const btn = $('masterBoostBtn');
+      const progressSection = $('progressSection');
+      const resultsPanel = $('resultsPanel');
 
       btn.classList.add('opacity-50', 'cursor-not-allowed');
       resultsPanel.classList.add('hidden');
       progressSection.classList.remove('hidden');
-      document.getElementById('progressBar').style.width = '100%';
-      document.getElementById('progressPercent').textContent = '';
-      document.getElementById('progressStepText').textContent = 'Applying changes...';
+      $('progressBar').style.width = '100%';
+      $('progressPercent').textContent = '';
+      $('progressStepText').textContent = 'Applying changes...';
       setBadge('Optimizing...', 'bg-amber-950 text-amber-300 border border-amber-800/50 animate-pulse');
       appendLog('Starting boost...');
 
       try {
         const r = await tauriInvoke('execute_full_boost');
         r.logMessages.forEach(appendLog);
-        document.getElementById('resSpace').textContent = r.spaceFreedMb + ' MB';
-        document.getElementById('resPlan').textContent = r.powerPlan || 'Not changed';
-        document.getElementById('resGame').textContent = r.gameModeEnabled ? 'On' : 'Not changed';
+        $('resSpace').textContent = r.spaceFreedMb + ' MB';
+        $('resPlan').textContent = r.powerPlan || 'Not changed';
+        $('resGame').textContent = r.gameModeEnabled ? 'On' : 'Not changed';
         resultsPanel.classList.remove('hidden');
-        if (r.success) {
-          setBadge('System Optimized', 'bg-emerald-950 text-emerald-300 border border-emerald-800/50');
-        } else {
-          setBadge('Finished with errors', 'bg-red-950 text-red-300 border border-red-800/50');
-        }
+        if (r.success) setBadge('System Optimized', 'bg-emerald-950 text-emerald-300 border border-emerald-800/50');
+        else setBadge('Finished with errors', 'bg-red-950 text-red-300 border border-red-800/50');
       } catch (e) {
-        appendLog('Boost failed: ' + (e && e.message ? e.message : e));
+        appendLog('Boost failed: ' + errText(e));
         setBadge('Failed', 'bg-red-950 text-red-300 border border-red-800/50');
       } finally {
         progressSection.classList.add('hidden');
@@ -311,39 +382,191 @@
       try {
         const ok = await tauriInvoke('restore_power_plan');
         appendLog(ok ? 'Previous power plan restored.' : 'Nothing to restore (no saved power plan found).');
-      } catch (e) {
-        appendLog('Undo failed: ' + (e && e.message ? e.message : e));
-      }
+      } catch (e) { appendLog('Undo failed: ' + errText(e)); }
     }
 
     async function launchGame(client) {
       try {
         const ok = await tauriInvoke('launch_client', { name: client });
         appendLog(ok ? 'Opening ' + client + '...' : 'Could not open ' + client + '. Is it installed?');
+      } catch (e) { appendLog('Launch failed: ' + errText(e)); }
+    }
+
+    // ---------------------------------------------------------- check-up
+    const STATUS_STYLE = {
+      good:  { icon: 'fa-circle-check',        color: 'text-emerald-400', border: 'border-emerald-500/20' },
+      warn:  { icon: 'fa-triangle-exclamation', color: 'text-red-400',     border: 'border-red-500/30' },
+      check: { icon: 'fa-circle-question',      color: 'text-amber-400',   border: 'border-amber-500/30' }
+    };
+
+    function renderCheckup(report) {
+      const list = $('checkupList');
+      list.innerHTML = '';
+      // Problems first, then things worth a look, then good.
+      const order = { warn: 0, check: 1, good: 2 };
+      const items = report.items.slice().sort((a, b) => order[a.status] - order[b.status]);
+
+      items.forEach(it => {
+        const st = STATUS_STYLE[it.status] || STATUS_STYLE.check;
+        const row = document.createElement('div');
+        row.className = 'flex items-start gap-3 bg-slate-950 border ' + st.border + ' rounded-xl p-3';
+
+        const icon = document.createElement('i');
+        icon.className = 'fa-solid ' + st.icon + ' ' + st.color + ' mt-0.5';
+        row.appendChild(icon);
+
+        const body = document.createElement('div');
+        body.className = 'flex-1 min-w-0';
+        const title = document.createElement('div');
+        title.className = 'text-sm font-bold text-white';
+        title.textContent = it.title;
+        const detail = document.createElement('div');
+        detail.className = 'text-xs text-slate-400 mt-0.5';
+        detail.textContent = it.detail;
+        body.appendChild(title);
+        body.appendChild(detail);
+        row.appendChild(body);
+
+        if (it.fixId) {
+          const btn = document.createElement('button');
+          btn.className = 'shrink-0 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-orbitron font-bold text-[11px] px-3 py-1.5 rounded-lg transition';
+          btn.textContent = 'FIX';
+          btn.onclick = () => applyFix(it.fixId, btn);
+          row.appendChild(btn);
+        }
+        list.appendChild(row);
+      });
+
+      const total = report.items.length;
+      const sum = $('checkupSummary');
+      sum.classList.remove('hidden');
+      sum.textContent = report.good + ' of ' + total + ' checks look good' +
+        (report.attention > 0 ? ' - ' + report.attention + ' worth a look.' : '. Nice setup!');
+    }
+
+    async function runCheckup() {
+      const btn = $('checkupBtn');
+      btn.disabled = true;
+      btn.classList.add('opacity-50');
+      btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> SCANNING...';
+      appendLog('Running PC check-up...');
+      try {
+        const report = await tauriInvoke('run_checkup');
+        renderCheckup(report);
+        appendLog('Check-up done: ' + report.good + ' good, ' + report.attention + ' to review.');
       } catch (e) {
-        appendLog('Launch failed: ' + (e && e.message ? e.message : e));
+        appendLog('Check-up failed: ' + errText(e));
+        $('checkupList').textContent = 'The check-up could not run: ' + errText(e);
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('opacity-50');
+        btn.innerHTML = '<i class="fa-solid fa-stethoscope"></i> RUN CHECK-UP';
+      }
+    }
+
+    async function applyFix(fixId, btn) {
+      btn.disabled = true;
+      btn.textContent = '...';
+      try {
+        const msg = await tauriInvoke('apply_fix', { id: fixId });
+        appendLog(msg);
+        await runCheckup(); // refresh results
+      } catch (e) {
+        appendLog('Fix failed: ' + errText(e));
+        btn.disabled = false;
+        btn.textContent = 'FIX';
+      }
+    }
+
+    // --------------------------------------------------------- telemetry
+    function fmtUptime(h) {
+      if (h >= 48) return Math.floor(h / 24) + ' days';
+      return Math.round(h) + ' hours';
+    }
+    function fmtMem(mb) { return mb >= 1024 ? (mb / 1024).toFixed(1) + ' GB' : mb + ' MB'; }
+    function setBar(id, pct) { $(id).style.width = Math.max(0, Math.min(100, pct)) + '%'; }
+
+    async function loadHardware() {
+      try {
+        const h = await tauriInvoke('get_hardware_info');
+        const cores = h.physicalCores ? h.physicalCores + ' cores / ' + h.logicalCores + ' threads' : h.logicalCores + ' threads';
+        $('hwCpu').textContent = 'CPU: ' + (h.cpuName || 'Unknown') + ' (' + cores + ')';
+        $('hwGpu').textContent = 'GPU: ' + (h.gpuName || 'Unknown');
+      } catch (e) {
+        $('hwCpu').textContent = 'CPU: unavailable';
+        $('hwGpu').textContent = 'GPU: unavailable';
       }
     }
 
     async function refreshMetrics() {
+      if (metricsBusy) return;
+      metricsBusy = true;
       try {
         const m = await tauriInvoke('get_system_metrics');
-        document.getElementById('ramUsageVal').textContent = m.usedMemoryGb + ' / ' + m.totalMemoryGb + ' GB';
-        document.getElementById('ramUsageBar').style.width = m.memoryUsagePercent + '%';
-        document.getElementById('cpuUsageVal').textContent = Math.round(m.cpuUsagePercent) + '%';
-        document.getElementById('cpuUsageBar').style.width = m.cpuUsagePercent + '%';
-      } catch (e) { /* not running inside the app, or backend busy */ }
+        $('cpuUsageVal').textContent = Math.round(m.cpuUsagePercent) + '%';
+        setBar('cpuUsageBar', m.cpuUsagePercent);
+        $('ramUsageVal').textContent = m.usedMemoryGb + ' / ' + m.totalMemoryGb + ' GB';
+        setBar('ramUsageBar', m.memoryUsagePercent);
+        if (m.diskTotalGb > 0) {
+          $('diskUsageVal').textContent = Math.round(m.diskUsedGb) + ' / ' + Math.round(m.diskTotalGb) + ' GB';
+          setBar('diskUsageBar', m.diskUsagePercent);
+        }
+        $('procCount').textContent = m.processCount;
+        $('uptimeVal').textContent = fmtUptime(m.uptimeHours);
+
+        const box = $('topApps');
+        box.innerHTML = '';
+        m.topProcesses.forEach(p => {
+          const row = document.createElement('div');
+          row.className = 'flex justify-between gap-2';
+          const name = document.createElement('span');
+          name.className = 'truncate';
+          name.textContent = p.name;
+          const val = document.createElement('span');
+          val.className = 'shrink-0 text-slate-300';
+          val.textContent = fmtMem(p.memoryMb);
+          row.appendChild(name);
+          row.appendChild(val);
+          box.appendChild(row);
+        });
+      } catch (e) { /* not inside the app, or backend busy */ }
+      metricsBusy = false;
     }
 
-    function openModal() { document.getElementById('licenseModal').style.display = 'flex'; }
-    function closeModal() { document.getElementById('licenseModal').style.display = 'none'; }
+    async function refreshGpu() {
+      if (gpuBusy) return;
+      gpuBusy = true;
+      try {
+        const g = await tauriInvoke('get_gpu_stats');
+        if (!g.available) {
+          $('gpuUsageVal').textContent = 'Not available';
+          setBar('gpuUsageBar', 0);
+          $('vramRow').classList.add('hidden');
+        } else {
+          const usage = g.usagePercent != null ? Math.round(g.usagePercent) + '%' : 'N/A';
+          const temp = g.tempC != null ? ' (' + Math.round(g.tempC) + '\u00B0C)' : '';
+          $('gpuUsageVal').textContent = usage + temp;
+          setBar('gpuUsageBar', g.usagePercent || 0);
+          if (g.vramTotalMb) {
+            $('vramRow').classList.remove('hidden');
+            $('vramUsageVal').textContent = (g.vramUsedMb / 1024).toFixed(1) + ' / ' + (g.vramTotalMb / 1024).toFixed(1) + ' GB';
+            setBar('vramUsageBar', (g.vramUsedMb / g.vramTotalMb) * 100);
+          }
+        }
+      } catch (e) { /* ignore */ }
+      gpuBusy = false;
+    }
+
+    // ----------------------------------------------------------- license
+    function openModal() { $('licenseModal').style.display = 'flex'; }
+    function closeModal() { $('licenseModal').style.display = 'none'; }
 
     function showProActive() {
-      document.getElementById('proBtn').innerHTML = '<i class="fa-solid fa-circle-check mr-1"></i> PRO ACTIVE';
+      $('proBtn').innerHTML = '<i class="fa-solid fa-circle-check mr-1"></i> PRO ACTIVE';
     }
 
     async function submitLicense() {
-      const key = document.getElementById('licenseInput').value.trim();
+      const key = $('licenseInput').value.trim();
       if (!key) { alert('Please enter a license key.'); return; }
       try {
         const isValid = await tauriInvoke('verify_license', { key: key });
@@ -362,8 +585,11 @@
     }
 
     try { if (localStorage.getItem('optiboost_pro') === '1') showProActive(); } catch (e) {}
+    loadHardware();
     refreshMetrics();
-    setInterval(refreshMetrics, 3000);
+    refreshGpu();
+    setInterval(refreshMetrics, 4000);
+    setInterval(refreshGpu, 6000);
   </script>
   <!-- OptiBOOST Pro Activation Modal -->
   <div id="licenseModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; z-index: 9999;">
