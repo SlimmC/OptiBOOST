@@ -38,16 +38,22 @@ fn run_ps_script(script: &str) -> Result<String, String> {
 #[command]
 fn get_system_metrics() -> SystemMetrics {
     let mut sys = System::new_all();
+    // Refresh memory telemetry explicitly
     sys.refresh_memory();
 
     let total = sys.total_memory();
     let used = sys.used_memory();
     
+    // Bytes to GB conversion (1024^3)
     let total_gb = total as f32 / (1024.0 * 1024.0 * 1024.0);
     let used_gb = used as f32 / (1024.0 * 1024.0 * 1024.0);
-    let usage_percent = if total > 0 { (used as f32 / total as f32) * 100.0 } else { 0.0 };
     
-    // Dynamic FPS boost estimation based on real-time memory load
+    let usage_percent = if total > 0 { 
+        (used as f32 / total as f32) * 100.0 
+    } else { 
+        0.0 
+    };
+
     let estimated_fps_boost = if usage_percent > 75.0 {
         22.5
     } else if usage_percent > 50.0 {
