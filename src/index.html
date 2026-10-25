@@ -389,7 +389,7 @@
     // Fetch real-time hardware telemetry on app startup
     async function loadSystemMetrics() {
       try {
-        const metrics = await window.__TAURI__.invoke('get_system_metrics');
+        const metrics = await window.__TAURI__.tauri.invoke('get_system_metrics');
         
         // Update RAM UI
         const ramText = `${metrics.used_memory_gb} / ${metrics.total_memory_gb} GB`;
@@ -428,7 +428,7 @@
 
       try {
         // Call the real Rust backend command that runs PowerShell optimizations
-        const result = await window.__TAURI__.invoke('execute_full_boost');
+        const result = await window.__TAURI__.tauri.invoke('execute_full_boost');
         
         progressBar.style.width = '100%';
         progressPercent.textContent = '100%';
@@ -483,7 +483,7 @@
     async function purgeRamOnly() {
       appendLog('Triggering manual RAM and temp cache cleanup...');
       try {
-        const freed = await window.__TAURI__.invoke('clean_temp_files');
+        const freed = await window.__TAURI__.tauri.invoke('clean_temp_files');
         appendLog(`Manual RAM purge complete: Reclaimed ~${freed} MB.`);
         loadSystemMetrics();
       } catch (err) {
@@ -526,7 +526,7 @@
       }
 
       try {
-        const isValid = await window.__TAURI__.invoke('verify_license', { key: key });
+        const isValid = await window.__TAURI__.tauri.invoke('verify_license', { key: key });
         if (isValid) {
           alert("License activated successfully! OptiBOOST Pro features unlocked.");
           closeModal();
