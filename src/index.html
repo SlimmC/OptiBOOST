@@ -99,7 +99,7 @@
         <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
         <span class="text-slate-300 font-semibold">Engine Active: Safe Mode</span>
       </div>
-      <button onclick="openModal()" class="bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-cyan-500/30 font-orbitron font-bold text-xs px-3 py-2 rounded-lg transition">
+      <button id="proBtn" onclick="openModal()" class="bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-cyan-500/30 font-orbitron font-bold text-xs px-3 py-2 rounded-lg transition">
   <i class="fa-solid fa-key mr-1"></i> ACTIVATE PRO
 </button>
     </div>
@@ -119,7 +119,7 @@
           <div>
             <span class="text-xs font-bold tracking-widest text-cyan-400 uppercase font-orbitron">Automated Tuning</span>
             <h2 class="text-3xl font-extrabold text-white font-orbitron">1-Click Gaming Boost</h2>
-            <p class="text-slate-400 text-sm mt-1">Cleans cache, prioritizes GPU/CPU for games, reduces lag, and stops background bloat.</p>
+            <p class="text-slate-400 text-sm mt-1">Switches Windows to a high-performance power plan, turns on Game Mode, and clears old temp files.</p>
           </div>
           <div class="text-right">
             <span id="boostStatusBadge" class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-cyan-950 text-cyan-300 border border-cyan-800/50">
@@ -135,8 +135,9 @@
             <span>BOOST PC NOW</span>
           </button>
           <p class="text-xs text-slate-500 mt-3 flex items-center gap-1">
-            <i class="fa-solid fa-shield-halved text-emerald-400"></i> 100% Safe • No risk of system errors or broken files
+            <i class="fa-solid fa-shield-halved text-emerald-400"></i> Only changes the power plan, Game Mode and old temp files. No admin rights needed.
           </p>
+          <button onclick="undoBoost()" class="mt-2 text-xs text-slate-400 hover:text-cyan-300 underline">Undo: restore my previous power plan</button>
         </div>
 
         <!-- Progress Scan Bar (Hidden initially) -->
@@ -158,177 +159,76 @@
         <!-- Post Boost Results Panel (Hidden initially) -->
         <div id="resultsPanel" class="hidden mt-6 bg-slate-950 border border-emerald-500/30 rounded-xl p-4 animate-fade-in">
           <div class="flex items-center gap-2 text-emerald-400 font-orbitron font-bold text-lg mb-3">
-            <i class="fa-solid fa-circle-check text-xl"></i> PC Optimization Completed!
+            <i class="fa-solid fa-circle-check text-xl"></i> Boost Finished
           </div>
           <div class="grid grid-cols-3 gap-3 text-center">
             <div class="bg-slate-900 p-3 rounded-lg border border-slate-800">
-              <div class="text-xs text-slate-400">RAM Freed</div>
-              <div class="text-xl font-bold text-cyan-400 font-orbitron" id="resRam">2.4 GB</div>
+              <div class="text-xs text-slate-400">Temp Space Freed</div>
+              <div class="text-xl font-bold text-cyan-400 font-orbitron" id="resSpace">-</div>
             </div>
             <div class="bg-slate-900 p-3 rounded-lg border border-slate-800">
-              <div class="text-xs text-slate-400">Est. FPS Boost</div>
-              <div class="text-xl font-bold text-emerald-400 font-orbitron" id="resFps">+18%</div>
+              <div class="text-xs text-slate-400">Power Plan</div>
+              <div class="text-sm font-bold text-emerald-400 font-orbitron" id="resPlan">-</div>
             </div>
             <div class="bg-slate-900 p-3 rounded-lg border border-slate-800">
-              <div class="text-xs text-slate-400">Input Latency</div>
-              <div class="text-xl font-bold text-amber-400 font-orbitron" id="resPing">-7 ms</div>
+              <div class="text-xs text-slate-400">Game Mode</div>
+              <div class="text-sm font-bold text-amber-400 font-orbitron" id="resGame">-</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Quick Tuning Preset Profiles -->
-      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5">
-        <h3 class="font-orbitron font-bold text-lg text-white mb-3 flex items-center gap-2">
-          <i class="fa-solid fa-sliders text-cyan-400"></i> Preset Gaming Profiles
-        </h3>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <button onclick="applyPreset('esports')" class="p-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-cyan-500/50 rounded-xl text-left transition group">
-            <div class="text-xs font-bold text-cyan-400 group-hover:text-cyan-300 font-orbitron">ESPORTS HIGH FPS</div>
-            <div class="text-[11px] text-slate-400 mt-1">Valorant, CS2, Fortnite</div>
-          </button>
-          <button onclick="applyPreset('aaa')" class="p-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-purple-500/50 rounded-xl text-left transition group">
-            <div class="text-xs font-bold text-purple-400 group-hover:text-purple-300 font-orbitron">MAX AAA VISUALS</div>
-            <div class="text-[11px] text-slate-400 mt-1">Cyberpunk, GTA V, Warzone</div>
-          </button>
-          <button onclick="applyPreset('quiet')" class="p-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-emerald-500/50 rounded-xl text-left transition group">
-            <div class="text-xs font-bold text-emerald-400 group-hover:text-emerald-300 font-orbitron">LOW TEMP / QUIET</div>
-            <div class="text-[11px] text-slate-400 mt-1">Laptops & Silent PC setup</div>
-          </button>
-          <button onclick="applyPreset('daily')" class="p-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-slate-600 rounded-xl text-left transition group">
-            <div class="text-xs font-bold text-slate-300 font-orbitron">BALANCED DAILY</div>
-            <div class="text-[11px] text-slate-400 mt-1">Web browsing & school work</div>
-          </button>
-        </div>
-      </div>
-
-      <!-- Safe Automated Overclocking & Hardware Tuning -->
-      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 relative overflow-hidden">
-        <div class="flex justify-between items-center mb-4">
-          <div>
-            <h3 class="font-orbitron font-bold text-lg text-white flex items-center gap-2">
-              <i class="fa-solid fa-gauge-high text-amber-400"></i> Safe Auto-Overclocking
-            </h3>
-            <p class="text-xs text-slate-400">Safe, automated hardware tuning with automatic overheat protection.</p>
-          </div>
-          <span class="text-xs font-bold px-2.5 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-full font-orbitron">
-            SAFE GUARD ACTIVE
-          </span>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
-          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex justify-between items-center">
-            <div>
-              <div class="text-xs text-slate-400">GPU Core Clock Offset</div>
-              <div id="gpuClockText" class="text-xl font-bold font-orbitron text-white">1810 MHz <span class="text-xs text-slate-500 font-normal">(Stock)</span></div>
-            </div>
-            <i class="fa-solid fa-microchip text-2xl text-slate-700"></i>
-          </div>
-
-          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex justify-between items-center">
-            <div>
-              <div class="text-xs text-slate-400">CPU Boost Clock Target</div>
-              <div id="cpuClockText" class="text-xl font-bold font-orbitron text-white">4.20 GHz <span class="text-xs text-slate-500 font-normal">(Stock)</span></div>
-            </div>
-            <i class="fa-solid fa-memory text-2xl text-slate-700"></i>
-          </div>
-        </div>
-
-        <div class="flex flex-wrap gap-3 items-center justify-between pt-2">
-          <button id="ocBtn" onclick="runAutoOverclock()" class="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 font-orbitron font-bold text-xs px-5 py-3 rounded-xl transition glow-amber flex items-center gap-2">
-            <i class="fa-solid fa-wand-magic-sparkles text-sm"></i> RUN SAFE AUTO-OC & STABILITY TEST
-          </button>
-          <button onclick="revertOverclock()" class="bg-slate-950 hover:bg-slate-800 text-slate-400 border border-slate-800 font-orbitron text-xs px-4 py-3 rounded-xl transition">
-            <i class="fa-solid fa-rotate-left mr-1"></i> Reset to Factory Stock
-          </button>
-        </div>
-      </div>
 
     </section>
 
     <!-- RIGHT COLUMN: Hardware Status Dashboard & Game Launcher -->
     <section class="lg:col-span-4 flex flex-col gap-6">
 
-      <!-- Real-time Hardware Metrics -->
+      <!-- Live PC Telemetry (real values from the backend) -->
       <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5">
         <h3 class="font-orbitron font-bold text-lg text-white mb-4 flex items-center gap-2">
           <i class="fa-solid fa-chart-pie text-cyan-400"></i> Live PC Telemetry
         </h3>
-
         <div class="space-y-4">
-          <!-- CPU -->
           <div>
             <div class="flex justify-between text-xs font-semibold mb-1">
               <span class="text-slate-300"><i class="fa-solid fa-microchip text-cyan-400 mr-1"></i> CPU Utilization</span>
-              <span id="cpuUsageVal" class="text-cyan-400 font-orbitron">42%</span>
+              <span id="cpuUsageVal" class="text-cyan-400 font-orbitron">-</span>
             </div>
             <div class="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden border border-slate-800">
-              <div id="cpuUsageBar" class="bg-cyan-500 h-full w-[42%] transition-all duration-500"></div>
+              <div id="cpuUsageBar" class="bg-cyan-500 h-full w-0 transition-all duration-500"></div>
             </div>
           </div>
-
-          <!-- GPU -->
-          <div>
-            <div class="flex justify-between text-xs font-semibold mb-1">
-              <span class="text-slate-300"><i class="fa-solid fa-display text-purple-400 mr-1"></i> GPU Usage & Temp</span>
-              <span id="gpuUsageVal" class="text-purple-400 font-orbitron">68% (54°C)</span>
-            </div>
-            <div class="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden border border-slate-800">
-              <div id="gpuUsageBar" class="bg-purple-500 h-full w-[68%] transition-all duration-500"></div>
-            </div>
-          </div>
-
-          <!-- RAM -->
           <div>
             <div class="flex justify-between text-xs font-semibold mb-1">
               <span class="text-slate-300"><i class="fa-solid fa-memory text-emerald-400 mr-1"></i> System RAM</span>
-              <span id="ramUsageVal" class="text-emerald-400 font-orbitron">11.8 / 16.0 GB</span>
+              <span id="ramUsageVal" class="text-emerald-400 font-orbitron">-</span>
             </div>
             <div class="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden border border-slate-800">
-              <div id="ramUsageBar" class="bg-emerald-500 h-full w-[74%] transition-all duration-500"></div>
-            </div>
-          </div>
-
-          <!-- Network Latency -->
-          <div>
-            <div class="flex justify-between text-xs font-semibold mb-1">
-              <span class="text-slate-300"><i class="fa-solid fa-wifi text-amber-400 mr-1"></i> DNS Ping Latency</span>
-              <span id="pingVal" class="text-amber-400 font-orbitron">19 ms</span>
-            </div>
-            <div class="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden border border-slate-800">
-              <div id="pingBar" class="bg-amber-500 h-full w-[25%] transition-all duration-500"></div>
+              <div id="ramUsageBar" class="bg-emerald-500 h-full w-0 transition-all duration-500"></div>
             </div>
           </div>
         </div>
-
-        <button onclick="purgeRamOnly()" class="mt-5 w-full py-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-emerald-500/50 rounded-xl text-xs font-bold text-emerald-400 font-orbitron transition flex items-center justify-center gap-2">
-          <i class="fa-solid fa-broom"></i> PURGE RAM MEMORY LEAKS NOW
-        </button>
       </div>
 
-      <!-- Quick Launch Bar with Pre-Launch Tuning -->
+      <!-- Game launchers -->
       <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5">
         <h3 class="font-orbitron font-bold text-lg text-white mb-2 flex items-center gap-2">
-          <i class="fa-solid fa-gamepad text-cyan-400"></i> Auto-Tune Launcher
+          <i class="fa-solid fa-gamepad text-cyan-400"></i> Game Launchers
         </h3>
-        <p class="text-xs text-slate-400 mb-4">Launches your game client with instant pre-tune sequence.</p>
-
-        <div class="grid grid-cols-2 gap-3">
-          <button onclick="launchGame('Steam')" class="p-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-center transition group">
+        <p class="text-xs text-slate-400 mb-4">Opens your game client. Run the boost first for best results.</p>
+        <div class="grid grid-cols-3 gap-3">
+          <button onclick="launchGame('steam')" class="p-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-center transition group">
             <i class="fa-brands fa-steam text-2xl text-slate-400 group-hover:text-cyan-400 transition mb-1"></i>
             <div class="text-xs font-bold text-slate-300 font-orbitron">STEAM</div>
           </button>
-          <button onclick="launchGame('Epic Games')" class="p-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-center transition group">
+          <button onclick="launchGame('epic')" class="p-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-center transition group">
             <i class="fa-solid fa-bolt text-2xl text-slate-400 group-hover:text-amber-400 transition mb-1"></i>
-            <div class="text-xs font-bold text-slate-300 font-orbitron">EPIC GAMES</div>
+            <div class="text-xs font-bold text-slate-300 font-orbitron">EPIC</div>
           </button>
-          <button onclick="launchGame('Riot Games')" class="p-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-center transition group">
-            <i class="fa-solid fa-shield text-2xl text-slate-400 group-hover:text-red-400 transition mb-1"></i>
-            <div class="text-xs font-bold text-slate-300 font-orbitron">RIOT / VALORANT</div>
-          </button>
-          <button onclick="launchGame('Xbox App')" class="p-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-center transition group">
+          <button onclick="launchGame('xbox')" class="p-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-center transition group">
             <i class="fa-brands fa-xbox text-2xl text-slate-400 group-hover:text-emerald-400 transition mb-1"></i>
-            <div class="text-xs font-bold text-slate-300 font-orbitron">XBOX GAME PASS</div>
+            <div class="text-xs font-bold text-slate-300 font-orbitron">XBOX</div>
           </button>
         </div>
       </div>
@@ -337,70 +237,34 @@
 
   </main>
 
-  <!-- PRO/ULTRA MODAL -->
-  <div id="ultraModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center hidden p-4">
-    <div class="bg-slate-900 border border-amber-500/40 rounded-2xl max-w-lg w-full p-6 relative shadow-2xl glow-amber">
-      <button onclick="toggleUltraModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-
-      <div class="text-center mb-6">
-        <div class="w-12 h-12 bg-amber-500/20 text-amber-400 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl">
-          <i class="fa-solid fa-crown"></i>
-        </div>
-        <h3 class="font-orbitron font-extrabold text-2xl text-white">Upgrade to OptiBOOST Ultra</h3>
-        <p class="text-xs text-slate-400 mt-1">Unlock maximum FPS potential and automated AI tuning.</p>
-      </div>
-
-      <div class="space-y-3 mb-6">
-        <div class="flex items-center gap-3 bg-slate-950 p-3 rounded-xl border border-slate-800">
-          <i class="fa-solid fa-check text-emerald-400 text-sm"></i>
-          <span class="text-xs text-slate-300 font-semibold">AI Dynamic Real-Time Overclocking</span>
-        </div>
-        <div class="flex items-center gap-3 bg-slate-950 p-3 rounded-xl border border-slate-800">
-          <i class="fa-solid fa-check text-emerald-400 text-sm"></i>
-          <span class="text-xs text-slate-300 font-semibold">Automated Shader Cache Pre-loading</span>
-        </div>
-        <div class="flex items-center gap-3 bg-slate-950 p-3 rounded-xl border border-slate-800">
-          <i class="fa-solid fa-check text-emerald-400 text-sm"></i>
-          <span class="text-xs text-slate-300 font-semibold">Custom Fan Curve & Low Noise Profiles</span>
-        </div>
-      </div>
-
-      <button onclick="simCheckout()" class="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-orbitron font-extrabold text-sm hover:from-amber-400 hover:to-orange-400 transition shadow-lg">
-        GET ULTRA LIFETIME PASS ($49.99)
-      </button>
-    </div>
-  </div>
-
-<!-- SCRIPT LOGIC -->
+  <!-- SCRIPT LOGIC -->
   <script>
     let isBoosting = false;
 
-    function appendLog(msg) {
-      const consoleEl = document.getElementById('logConsole');
-      const time = new Date().toLocaleTimeString().split(' ')[0];
-      const line = document.createElement('div');
-      line.innerHTML = `<span class="text-cyan-500">[${time}]</span> ${msg}`;
-      consoleEl.appendChild(line);
-      consoleEl.scrollTop = consoleEl.scrollHeight;
+    function tauriInvoke(cmd, args) {
+      const t = window.__TAURI__;
+      const inv = t && (t.invoke || (t.tauri && t.tauri.invoke));
+      if (!inv) return Promise.reject(new Error('This only works inside the installed OptiBOOST app.'));
+      return inv(cmd, args);
     }
 
-    // Fetch real-time hardware telemetry on app startup
-    async function loadSystemMetrics() {
-      try {
-        const metrics = await window.__TAURI__.tauri.invoke('get_system_metrics');
-        
-        // Update RAM UI
-        const ramText = `${metrics.used_memory_gb} / ${metrics.total_memory_gb} GB`;
-        document.getElementById('ramUsageVal').textContent = ramText;
-        document.getElementById('ramUsageBar').style.width = metrics.memory_usage_percent + '%';
-        
-        appendLog(`Hardware loaded: ${metrics.total_memory_gb} GB RAM detected (${metrics.memory_usage_percent}% in use).`);
-      } catch (err) {
-        console.error("Failed to load backend system metrics:", err);
-        appendLog("[Warning] Running on fallback telemetry simulation.");
-      }
+    function appendLog(msg) {
+      const el = document.getElementById('logConsole');
+      const time = new Date().toLocaleTimeString().split(' ')[0];
+      const line = document.createElement('div');
+      const stamp = document.createElement('span');
+      stamp.className = 'text-cyan-500';
+      stamp.textContent = '[' + time + '] ';
+      line.appendChild(stamp);
+      line.appendChild(document.createTextNode(String(msg)));
+      el.appendChild(line);
+      el.scrollTop = el.scrollHeight;
+    }
+
+    function setBadge(text, cls) {
+      const badge = document.getElementById('boostStatusBadge');
+      badge.textContent = text;
+      badge.className = 'inline-block px-3 py-1 rounded-full text-xs font-bold ' + cls;
     }
 
     async function runMasterBoost() {
@@ -409,146 +273,103 @@
 
       const btn = document.getElementById('masterBoostBtn');
       const progressSection = document.getElementById('progressSection');
-      const progressBar = document.getElementById('progressBar');
-      const progressPercent = document.getElementById('progressPercent');
-      const progressStepText = document.getElementById('progressStepText');
       const resultsPanel = document.getElementById('resultsPanel');
-      const badge = document.getElementById('boostStatusBadge');
 
       btn.classList.add('opacity-50', 'cursor-not-allowed');
-      progressSection.classList.remove('hidden');
       resultsPanel.classList.add('hidden');
-      badge.textContent = 'Optimizing...';
-      badge.className = 'inline-block px-3 py-1 rounded-full text-xs font-bold bg-amber-950 text-amber-300 border border-amber-800/50 animate-pulse';
-
-      appendLog('Initializing OptiBOOST backend engine...');
-      progressBar.style.width = '30%';
-      progressPercent.textContent = '30%';
-      progressStepText.textContent = 'Executing PowerShell system tuning...';
+      progressSection.classList.remove('hidden');
+      document.getElementById('progressBar').style.width = '100%';
+      document.getElementById('progressPercent').textContent = '';
+      document.getElementById('progressStepText').textContent = 'Applying changes...';
+      setBadge('Optimizing...', 'bg-amber-950 text-amber-300 border border-amber-800/50 animate-pulse');
+      appendLog('Starting boost...');
 
       try {
-        // Call the real Rust backend command that runs PowerShell optimizations
-        const result = await window.__TAURI__.tauri.invoke('execute_full_boost');
-        
-        progressBar.style.width = '100%';
-        progressPercent.textContent = '100%';
-
-        // Print each log message returned from Rust backend
-        if (result && result.log_messages) {
-          result.log_messages.forEach(msg => appendLog(msg));
-        }
-
-        // Update UI Results Panel
-        document.getElementById('resRam').textContent = `${result.space_freed_mb} MB`;
+        const r = await tauriInvoke('execute_full_boost');
+        r.logMessages.forEach(appendLog);
+        document.getElementById('resSpace').textContent = r.spaceFreedMb + ' MB';
+        document.getElementById('resPlan').textContent = r.powerPlan || 'Not changed';
+        document.getElementById('resGame').textContent = r.gameModeEnabled ? 'On' : 'Not changed';
         resultsPanel.classList.remove('hidden');
-
-        badge.textContent = 'System Optimized';
-        badge.className = 'inline-block px-3 py-1 rounded-full text-xs font-bold bg-emerald-950 text-emerald-300 border border-emerald-800/50';
-
-        // Refresh live hardware metrics post-boost
-        loadSystemMetrics();
-      } catch (err) {
-        console.error("Boost execution error:", err);
-        appendLog("[Error] Failed to execute full boost sequence.");
+        if (r.success) {
+          setBadge('System Optimized', 'bg-emerald-950 text-emerald-300 border border-emerald-800/50');
+        } else {
+          setBadge('Finished with errors', 'bg-red-950 text-red-300 border border-red-800/50');
+        }
+      } catch (e) {
+        appendLog('Boost failed: ' + (e && e.message ? e.message : e));
+        setBadge('Failed', 'bg-red-950 text-red-300 border border-red-800/50');
       } finally {
-        isBoosting = false;
-        btn.classList.remove('opacity-50', 'cursor-not-allowed');
         progressSection.classList.add('hidden');
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        isBoosting = false;
+        refreshMetrics();
       }
     }
 
-    function runAutoOverclock() {
-      const ocBtn = document.getElementById('ocBtn');
-      ocBtn.disabled = true;
-      ocBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Testing Hardware Stability...';
-
-      appendLog('Initiating Safe GPU & CPU clock step adjustment...');
-
-      setTimeout(() => {
-        document.getElementById('gpuClockText').innerHTML = '1885 MHz <span class="text-xs text-amber-400 font-semibold">(+75 MHz)</span>';
-        document.getElementById('cpuClockText').innerHTML = '4.35 GHz <span class="text-xs text-amber-400 font-semibold">(+150 MHz)</span>';
-        
-        appendLog('Stability stress test passed. Safe offset applied.');
-        ocBtn.disabled = false;
-        ocBtn.innerHTML = '<i class="fa-solid fa-check text-emerald-400"></i> OC APPLIED & STABLE';
-      }, 2000);
-    }
-
-    function revertOverclock() {
-      document.getElementById('gpuClockText').innerHTML = '1810 MHz <span class="text-xs text-slate-500 font-normal">(Stock)</span>';
-      document.getElementById('cpuClockText').innerHTML = '4.20 GHz <span class="text-xs text-slate-500 font-normal">(Stock)</span>';
-      appendLog('Clock speeds safely reset to factory defaults.');
-    }
-
-    async function purgeRamOnly() {
-      appendLog('Triggering manual RAM and temp cache cleanup...');
+    async function undoBoost() {
       try {
-        const freed = await window.__TAURI__.tauri.invoke('clean_temp_files');
-        appendLog(`Manual RAM purge complete: Reclaimed ~${freed} MB.`);
-        loadSystemMetrics();
-      } catch (err) {
-        appendLog('[Error] Manual purge failed.');
+        const ok = await tauriInvoke('restore_power_plan');
+        appendLog(ok ? 'Previous power plan restored.' : 'Nothing to restore (no saved power plan found).');
+      } catch (e) {
+        appendLog('Undo failed: ' + (e && e.message ? e.message : e));
       }
     }
 
-    function launchGame(client) {
-      appendLog(`Pre-tune sequence complete. Launching ${client}...`);
-      alert(`Pre-boost applied! Launching ${client}...`);
+    async function launchGame(client) {
+      try {
+        const ok = await tauriInvoke('launch_client', { name: client });
+        appendLog(ok ? 'Opening ' + client + '...' : 'Could not open ' + client + '. Is it installed?');
+      } catch (e) {
+        appendLog('Launch failed: ' + (e && e.message ? e.message : e));
+      }
     }
 
-    function applyPreset(preset) {
-      appendLog(`Applied preset profile: ${preset.toUpperCase()}`);
+    async function refreshMetrics() {
+      try {
+        const m = await tauriInvoke('get_system_metrics');
+        document.getElementById('ramUsageVal').textContent = m.usedMemoryGb + ' / ' + m.totalMemoryGb + ' GB';
+        document.getElementById('ramUsageBar').style.width = m.memoryUsagePercent + '%';
+        document.getElementById('cpuUsageVal').textContent = Math.round(m.cpuUsagePercent) + '%';
+        document.getElementById('cpuUsageBar').style.width = m.cpuUsagePercent + '%';
+      } catch (e) { /* not running inside the app, or backend busy */ }
     }
 
-    function toggleUltraModal() {
-      const modal = document.getElementById('ultraModal');
-      modal.classList.toggle('hidden');
-    }
+    function openModal() { document.getElementById('licenseModal').style.display = 'flex'; }
+    function closeModal() { document.getElementById('licenseModal').style.display = 'none'; }
 
-    function simCheckout() {
-      alert('OptiBOOST Ultra activated! Thank you for supporting the project.');
-      toggleUltraModal();
-    }
-
-    function openModal() {
-      document.getElementById('licenseModal').style.display = 'flex';
-    }
-
-    function closeModal() {
-      document.getElementById('licenseModal').style.display = 'none';
+    function showProActive() {
+      document.getElementById('proBtn').innerHTML = '<i class="fa-solid fa-circle-check mr-1"></i> PRO ACTIVE';
     }
 
     async function submitLicense() {
       const key = document.getElementById('licenseInput').value.trim();
-      if (!key) {
-        alert("Please enter a license key.");
-        return;
-      }
-
+      if (!key) { alert('Please enter a license key.'); return; }
       try {
-        const isValid = await window.__TAURI__.tauri.invoke('verify_license', { key: key });
+        const isValid = await tauriInvoke('verify_license', { key: key });
         if (isValid) {
-          alert("License activated successfully! OptiBOOST Pro features unlocked.");
+          try { localStorage.setItem('optiboost_pro', '1'); } catch (e) {}
+          showProActive();
+          alert('License activated. Thank you!');
           closeModal();
         } else {
-          alert("Invalid or expired license key. Please try again.");
+          alert('Invalid or expired license key. Please try again.');
         }
       } catch (error) {
-        console.error("Backend error:", error);
-        alert("Could not verify license. Please check your internet connection.");
+        console.error('Backend error:', error);
+        alert('Could not verify license. Please check your internet connection.');
       }
     }
 
-    // Load live telemetry on window startup
-    window.addEventListener('DOMContentLoaded', () => {
-      loadSystemMetrics();
-    });
+    try { if (localStorage.getItem('optiboost_pro') === '1') showProActive(); } catch (e) {}
+    refreshMetrics();
+    setInterval(refreshMetrics, 3000);
   </script>
   <!-- OptiBOOST Pro Activation Modal -->
   <div id="licenseModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; z-index: 9999;">
     <div style="background: #1e1e2e; padding: 24px; border-radius: 12px; text-align: center; color: white; width: 320px; border: 1px solid #313244; font-family: sans-serif;">
       <h2 style="margin-top: 0; color: #89b4fa;">🚀 Unlock OptiBOOST Pro</h2>
-      <p style="font-size: 0.9em; color: #a6adc8;">Enter your license key below to unlock advanced features and remove ads.</p>
+      <p style="font-size: 0.9em; color: #a6adc8;">Enter your license key to activate OptiBOOST Pro.</p>
       
       <input type="text" id="licenseInput" placeholder="XXXXXX-XXXXXX-XXXXXX" style="width: 100%; padding: 10px; margin: 15px 0; border-radius: 6px; border: 1px solid #45475a; background: #11111b; color: white; box-sizing: border-box; text-align: center;" />
       
