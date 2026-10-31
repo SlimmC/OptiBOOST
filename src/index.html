@@ -99,9 +99,9 @@
         <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
         <span class="text-slate-300 font-semibold">Engine Active: Safe Mode</span>
       </div>
-      <button id="proBtn" onclick="openModal()" class="bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-cyan-500/30 font-orbitron font-bold text-xs px-3 py-2 rounded-lg transition">
-  <i class="fa-solid fa-key mr-1"></i> ACTIVATE PRO
-</button>
+      <button id="donateBtn" onclick="openDonate()" class="bg-slate-800 hover:bg-slate-700 text-pink-400 border border-pink-500/30 font-orbitron font-bold text-xs px-3 py-2 rounded-lg transition">
+        <i class="fa-solid fa-heart mr-1"></i> SUPPORT
+      </button>
     </div>
   </header>
 
@@ -557,52 +557,28 @@
       gpuBusy = false;
     }
 
-    // ----------------------------------------------------------- license
-    function openModal() { $('licenseModal').style.display = 'flex'; }
-    function closeModal() { $('licenseModal').style.display = 'none'; }
+    // ----------------------------------------------------------- donate
+    // Paste your donation page here (Ko-fi, GitHub Sponsors, Buy Me a Coffee, PayPal...).
+    const DONATE_URL = 'https://ko-fi.com/optiboost';
 
-    function showProActive() {
-      $('proBtn').innerHTML = '<i class="fa-solid fa-circle-check mr-1"></i> PRO ACTIVE';
-    }
-
-    async function submitLicense() {
-      const key = $('licenseInput').value.trim();
-      if (!key) { alert('Please enter a license key.'); return; }
-      try {
-        const isValid = await tauriInvoke('verify_license', { key: key });
-        if (isValid) {
-          try { localStorage.setItem('optiboost_pro', '1'); } catch (e) {}
-          showProActive();
-          alert('License activated. Thank you!');
-          closeModal();
-        } else {
-          alert('Invalid or expired license key. Please try again.');
-        }
-      } catch (error) {
-        console.error('Backend error:', error);
-        alert('Could not verify license. Please check your internet connection.');
+    function openDonate() {
+      if (DONATE_URL.indexOf('YOUR_NAME_HERE') !== -1) {
+        alert('The donation link has not been set up yet.');
+        return;
+      }
+      const t = window.__TAURI__;
+      if (t && t.shell && t.shell.open) {
+        t.shell.open(DONATE_URL).catch(function (e) { appendLog('Could not open link: ' + errText(e)); });
+      } else {
+        window.open(DONATE_URL, '_blank');
       }
     }
 
-    try { if (localStorage.getItem('optiboost_pro') === '1') showProActive(); } catch (e) {}
     loadHardware();
     refreshMetrics();
     refreshGpu();
     setInterval(refreshMetrics, 4000);
     setInterval(refreshGpu, 6000);
   </script>
-  <!-- OptiBOOST Pro Activation Modal -->
-  <div id="licenseModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; z-index: 9999;">
-    <div style="background: #1e1e2e; padding: 24px; border-radius: 12px; text-align: center; color: white; width: 320px; border: 1px solid #313244; font-family: sans-serif;">
-      <h2 style="margin-top: 0; color: #89b4fa;">🚀 Unlock OptiBOOST Pro</h2>
-      <p style="font-size: 0.9em; color: #a6adc8;">Enter your license key to activate OptiBOOST Pro.</p>
-      
-      <input type="text" id="licenseInput" placeholder="XXXXXX-XXXXXX-XXXXXX" style="width: 100%; padding: 10px; margin: 15px 0; border-radius: 6px; border: 1px solid #45475a; background: #11111b; color: white; box-sizing: border-box; text-align: center;" />
-      
-      <button onclick="submitLicense()" style="width: 100%; padding: 10px; background: #a6e3a1; color: #11111b; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Activate License</button>
-      
-      <button onclick="closeModal()" style="margin-top: 10px; background: transparent; color: #a6adc8; border: none; cursor: pointer;">Cancel</button>
-    </div>
-  </div>
 </body>
 </html>
